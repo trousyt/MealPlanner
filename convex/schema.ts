@@ -1,7 +1,10 @@
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
+import { authTables } from '@convex-dev/auth/server'
 
 export default defineSchema({
+  ...authTables,
+
   families: defineTable({
     name: v.string(),
     createdAt: v.number(),
@@ -10,15 +13,20 @@ export default defineSchema({
   profiles: defineTable({
     familyId: v.id('families'),
     name: v.string(),
-    avatarUrl: v.optional(v.string()),
+    color: v.string(), // Hex color for avatar background
     createdAt: v.number(),
   }).index('by_family', ['familyId']),
 
   users: defineTable({
-    email: v.string(),
-    passwordHash: v.string(),
-    familyId: v.id('families'),
-    profileId: v.id('profiles'),
+    // Convex Auth fields
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    image: v.optional(v.string()),
+    isAnonymous: v.optional(v.boolean()),
+    name: v.optional(v.string()),
+    // Custom fields
+    familyId: v.optional(v.id('families')),
+    profileId: v.optional(v.id('profiles')),
   }).index('by_email', ['email']),
 
   recipes: defineTable({

@@ -27,6 +27,11 @@ export default defineConfig([
     },
     rules: {
       'prettier/prettier': 'error',
+      // Allow exporting non-components from UI component files and contexts
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true, allowExportNames: ['buttonVariants', 'useProfileContext'] },
+      ],
     },
   },
 ])

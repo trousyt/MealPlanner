@@ -17,11 +17,19 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@auth/core": "0.37.0",
+    "@convex-dev/auth": "^0.0.90",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-router": "^1.154.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.31.5",
     "lucide-react": "^0.562.0",
+    "posthog-js": "^1.334.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwind-merge": "^3.4.0"
