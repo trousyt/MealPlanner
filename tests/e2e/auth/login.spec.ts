@@ -32,7 +32,10 @@ test.describe('User Login', () => {
     await page.getByRole('button', { name: /sign in/i }).click()
 
     // Wait for error message (backend needs to respond)
-    await expect(page.getByText(/failed|invalid|error/i)).toBeVisible({ timeout: 10000 })
+    // Sanitized message is "Invalid email or password" or "Unable to sign in"
+    await expect(page.getByText(/invalid email or password|unable to sign in/i)).toBeVisible({
+      timeout: 15000,
+    })
   })
 
   test('should disable inputs while signing in', async ({ page }) => {

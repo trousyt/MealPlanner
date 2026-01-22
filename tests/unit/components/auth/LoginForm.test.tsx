@@ -3,6 +3,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LoginForm } from '@/components/auth/LoginForm'
 
+// Mock posthog-js
+vi.mock('posthog-js', () => ({
+  default: {
+    capture: vi.fn(),
+  },
+}))
+
 // Mock the useAuth hook
 const mockSignIn = vi.fn()
 vi.mock('@/hooks/useAuth', () => ({
@@ -56,7 +63,7 @@ describe('LoginForm', () => {
     })
   })
 
-  it('displays error message on failed sign in', async () => {
+  it('displays sanitized error message on failed sign in', async () => {
     mockSignIn.mockRejectedValueOnce(new Error('Invalid credentials'))
     render(<LoginForm onSwitchToSignUp={mockSwitchToSignUp} />)
 
@@ -65,7 +72,7 @@ describe('LoginForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
+      expect(screen.getByText('Invalid email or password')).toBeInTheDocument()
     })
   })
 
@@ -85,7 +92,7 @@ describe('LoginForm', () => {
   })
 
   describe('failure cases', () => {
-    it('displays generic error for non-Error exceptions', async () => {
+    it('displays generic sanitized error for non-Error exceptions', async () => {
       mockSignIn.mockRejectedValueOnce('Some string error')
       render(<LoginForm onSwitchToSignUp={mockSwitchToSignUp} />)
 
@@ -94,12 +101,12 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/failed to sign in/i)).toBeInTheDocument()
+        expect(screen.getByText('Unable to sign in. Please try again.')).toBeInTheDocument()
       })
     })
 
-    it('displays network error message', async () => {
-      mockSignIn.mockRejectedValueOnce(new Error('Network request failed'))
+    it('displays sanitized network error message', async () => {
+      mockSignIn.mockRejectedValueOnce(new Error('network error'))
       render(<LoginForm onSwitchToSignUp={mockSwitchToSignUp} />)
 
       await userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
@@ -107,11 +114,13 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/network request failed/i)).toBeInTheDocument()
+        expect(
+          screen.getByText('Unable to connect. Please check your internet connection.')
+        ).toBeInTheDocument()
       })
     })
 
-    it('displays user not found error', async () => {
+    it('sanitizes user not found to prevent enumeration', async () => {
       mockSignIn.mockRejectedValueOnce(new Error('User not found'))
       render(<LoginForm onSwitchToSignUp={mockSwitchToSignUp} />)
 
@@ -120,7 +129,8 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/user not found/i)).toBeInTheDocument()
+        // Should show same message as wrong password to prevent user enumeration
+        expect(screen.getByText('Invalid email or password')).toBeInTheDocument()
       })
     })
 
@@ -133,7 +143,7 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
+        expect(screen.getByText('Invalid email or password')).toBeInTheDocument()
       })
 
       // Now retry - error should clear when form is submitted again
@@ -143,7 +153,7 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.queryByText(/invalid credentials/i)).not.toBeInTheDocument()
+        expect(screen.queryByText('Invalid email or password')).not.toBeInTheDocument()
       })
     })
 
@@ -156,7 +166,8 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/server error/i)).toBeInTheDocument()
+        // Server error is unknown, so gets generic message
+        expect(screen.getByText('Unable to sign in. Please try again.')).toBeInTheDocument()
       })
 
       // Inputs should be re-enabled after error

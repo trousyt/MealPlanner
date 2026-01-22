@@ -3,6 +3,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SignUpForm } from '@/components/auth/SignUpForm'
 
+// Mock posthog-js
+vi.mock('posthog-js', () => ({
+  default: {
+    capture: vi.fn(),
+  },
+}))
+
 // Mock the useAuth hook
 const mockSignIn = vi.fn()
 vi.mock('@/hooks/useAuth', () => ({
@@ -92,7 +99,7 @@ describe('SignUpForm', () => {
     })
   })
 
-  it('displays error message on failed sign up', async () => {
+  it('displays sanitized error message on failed sign up', async () => {
     mockSignIn.mockRejectedValueOnce(new Error('Email already exists'))
     render(<SignUpForm onSwitchToLogin={mockSwitchToLogin} />)
 
@@ -103,7 +110,7 @@ describe('SignUpForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/email already exists/i)).toBeInTheDocument()
+      expect(screen.getByText('An account with this email already exists')).toBeInTheDocument()
     })
   })
 
@@ -139,7 +146,7 @@ describe('SignUpForm', () => {
       })
     })
 
-    it('displays generic error for non-Error exceptions', async () => {
+    it('displays generic sanitized error for non-Error exceptions', async () => {
       mockSignIn.mockRejectedValueOnce({ code: 'UNKNOWN' })
       render(<SignUpForm onSwitchToLogin={mockSwitchToLogin} />)
 
@@ -150,11 +157,11 @@ describe('SignUpForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/failed to sign up/i)).toBeInTheDocument()
+        expect(screen.getByText('Unable to create account. Please try again.')).toBeInTheDocument()
       })
     })
 
-    it('displays network error message', async () => {
+    it('displays sanitized network error message', async () => {
       mockSignIn.mockRejectedValueOnce(new Error('Network error'))
       render(<SignUpForm onSwitchToLogin={mockSwitchToLogin} />)
 
@@ -165,11 +172,13 @@ describe('SignUpForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/network error/i)).toBeInTheDocument()
+        expect(
+          screen.getByText('Unable to connect. Please check your internet connection.')
+        ).toBeInTheDocument()
       })
     })
 
-    it('displays invalid email error from server', async () => {
+    it('sanitizes unknown server errors', async () => {
       mockSignIn.mockRejectedValueOnce(new Error('Invalid email format'))
       render(<SignUpForm onSwitchToLogin={mockSwitchToLogin} />)
 
@@ -180,7 +189,8 @@ describe('SignUpForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/invalid email format/i)).toBeInTheDocument()
+        // Unknown error gets generic message
+        expect(screen.getByText('Unable to create account. Please try again.')).toBeInTheDocument()
       })
     })
 
@@ -219,7 +229,8 @@ describe('SignUpForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /create account/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/server error/i)).toBeInTheDocument()
+        // Server error is unknown, so gets generic message
+        expect(screen.getByText('Unable to create account. Please try again.')).toBeInTheDocument()
       })
 
       // Inputs should be re-enabled after error

@@ -22,8 +22,9 @@
 
 - **Test-Driven Development (TDD)**: Write tests before implementation
 - **Small units**: Break tasks into small, testable pieces
-- **Run tests after each task completion**
-- Follow Convex guidelines from `convex_rules.md`
+- **Run tests and linting after each task completion**
+- **Update tests with implementation**: When modifying implementation code, always update corresponding tests to match
+- **E2E tests**: Should cover _only_ the most important app workflows
 
 ## Commands
 
@@ -80,9 +81,14 @@ mealplanner/
 
 ## Coding Conventions
 
+- Practice defensive programming, considering the worst case user input or actions
+    - Never expose error details, secret keys, or user PII
 - Use TypeScript strict mode
-- All Convex functions must have argument and return validators
-- Prefer functional components with hooks
-- Use React Query for client-side caching alongside Convex subscriptions
+- Use @/convex/convex_rules.md to know how to write Convex code
+    - All Convex functions must have argument and return validators
+- Write React code using React skills and:
+    - Prefer functional components with hooks
+    - Use React Query for client-side caching alongside Convex subscriptions
 - Follow ESLint + Prettier rules
 - All features require tests before implementation (TDD)
+    - Tests should cover all use cases and inputs

@@ -40,6 +40,12 @@ test.describe('User Registration', () => {
     await page.getByLabel(/email/i).fill('test@example.com')
     await page.getByLabel(/^password$/i).fill('short')
     await page.getByLabel(/confirm password/i).fill('short')
+
+    // Bypass HTML5 validation to test our custom validation
+    await page.evaluate(() => {
+      const form = document.querySelector('form')
+      form?.setAttribute('novalidate', 'true')
+    })
     await page.getByRole('button', { name: /create account/i }).click()
 
     await expect(page.getByText(/password must be at least 8 characters/i)).toBeVisible()

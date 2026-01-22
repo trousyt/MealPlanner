@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { sanitizeAuthError } from '../../lib/authErrors'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -29,7 +30,7 @@ export function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
 
       await signIn('password', formData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in')
+      setError(sanitizeAuthError(err, 'login'))
     } finally {
       setIsLoading(false)
     }
